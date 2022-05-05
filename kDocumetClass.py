@@ -30,8 +30,10 @@ class kDocument():
             kompas_document_2d = kompas_api7_module.IKompasDocument2D(kompas_document)
             iDrawingDocument = kompas_api7_module.IDrawingDocument(kompas_document._oleobj_.QueryInterface(kompas_api7_module.IDrawingDocument.CLSID,pythoncom.IID_IDispatch))
             ISymbols2DContainer = kompas_api7_module.ISymbols2DContainer(kompas_api7_module.IKompasDocument2D(self.kompas_document).ViewsAndLayersManager.Views.View(i)._oleobj_.QueryInterface(kompas_api7_module.NamesToIIDMap['ISymbols2DContainer'],pythoncom.IID_IDispatch))
+            _iSymbols2DContainer = kompas_api7_module.IKompasDocument2D(kompas_document).ViewsAndLayersManager.Views.View(i)._oleobj_.QueryInterface(kompas_api7_module.NamesToIIDMap['ISymbols2DContainer'], pythoncom.IID_IDispatch)
             SheetsCount = kompas_document.LayoutSheets.Count
             ViewsCount = kompas_api7_module.IKompasDocument2D(kompas_document).ViewsAndLayersManager.Views.Count
+            iSymbols2DContainer = kompas_api7_module.ISymbols2DContainer(_iSymbols2DContainer)
             TextsInView = 0
             TablesInView = 0
             RoughsCoutn = 0
@@ -98,9 +100,9 @@ class kDocument():
             i = 0
             while (i < self.ViewsCount):
                   self.TextsInView += kompas_api7_module.IDrawingContainer(kompas_api7_module.IKompasDocument2D(self.kompas_document).ViewsAndLayersManager.Views.View(i)._oleobj_.QueryInterface(kompas_api7_module.NamesToIIDMap['IDrawingContainer'], pythoncom.IID_IDispatch)).DrawingTexts.Count
-                  self.TablesInView += ISymbols2DContainer.DrawingTables.Count
-                  self.RoughsCoutn += ISymbols2DContainer.Roughs.Count
-                  self.LineDimensionsCount += ISymbols2DContainer.LineDimensions.Count
+                  self.TablesInView += self.ISymbols2DContainer.DrawingTables.Count
+                  self.RoughsCoutn += self.ISymbols2DContainer.Roughs.Count
+                  self.LineDimensionsCount += self.ISymbols2DContainer.LineDimensions.Count
                   i += 1
       def showDrawContent(self):
             print("Документ", self.kompas_document.Name, "cодержит: \n",
@@ -160,13 +162,12 @@ class kDocument():
 
             i = 0
             while (i < self.ViewsCount):
-                  iSymbols2DContainer = kompas_api7_module.IKompasDocument2D(self.kompas_document).ViewsAndLayersManager.Views.View(i)._oleobj_.QueryInterface(kompas_api7_module.NamesToIIDMap['ISymbols2DContainer'], pythoncom.IID_IDispatch)
-                  iSymbols2DContainer = kompas_api7_module.ISymbols2DContainer(iSymbols2DContainer)
-                  TableViewCount = iSymbols2DContainer.DrawingTables.Count
+
+                  TableViewCount = self.iSymbols2DContainer.DrawingTables.Count
                   if TableViewCount == 0:
                         i += 1
                         continue
-                  iDrawingTables = iSymbols2DContainer.DrawingTables
+                  iDrawingTables = self.iSymbols2DContainer.DrawingTables
                   j = 0
                   while (j < TableViewCount):
                         iDrawingTable = iDrawingTables.DrawingTable(j)
