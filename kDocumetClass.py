@@ -40,10 +40,8 @@ class kDocument():
             LineDimensionsCount = 0
       def stamp(self):
             iStamp = iDocument2D.GetStamp()
-
             iStamp.ksOpenStamp()
             iStamp.ksColumnNumber(2)
-
             iTextLineParam = kompas6_api5_module.ksTextLineParam(
                   kompas_object.GetParamStruct(kompas6_constants.ko_TextLineParam))
             iTextLineParam.Init()
