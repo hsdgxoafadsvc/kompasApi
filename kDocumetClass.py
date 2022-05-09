@@ -3,6 +3,10 @@ from win32com.client import Dispatch, gencache
 import LDefin2D
 import MiscellaneousHelpers as MH
 
+class kAPPLICATION:
+
+      def __init__(self):
+
 #  Подключим константы API Компас
 kompas6_constants = gencache.EnsureModule("{75C9F5D0-B5B8-4526-8681-9903C567D2ED}", 0, 1, 0).constants
 kompas6_constants_3d = gencache.EnsureModule("{2CAF168C-7961-4B90-9DA2-701419BEEFE3}", 0, 1, 0).constants
@@ -16,12 +20,14 @@ MH.iKompasObject = kompas_object
 kompas_api7_module = gencache.EnsureModule("{69AC2981-37C0-4379-84FD-5DD2F3C0A520}", 0, 1, 0)
 application = gencache.EnsureModule("{69AC2981-37C0-4379-84FD-5DD2F3C0A520}", 0, 1, 0).IApplication(Dispatch("Kompas.Application.7")._oleobj_.QueryInterface(kompas_api7_module.IApplication.CLSID, pythoncom.IID_IDispatch))
 MH.iApplication = application
-
-Documents = application.Documents
+application.Visible = False
+input()
+application.Quit()
+#Documents = application.Documents
 
 #  Получим активный документ
-iDocument2D = kompas_object.ActiveDocument2D()
-application.Visible = True
+#iDocument2D = kompas_object.ActiveDocument2D()
+#application.Visible = True
 
 class kDocument():
 
@@ -35,6 +41,7 @@ class kDocument():
             self.TablesInView = 0
             self.RoughsCoutn = 0
             self.LineDimensionsCount = 0
+            self.contents()
       def stamp(self):
             iStamp = iDocument2D.GetStamp()
             iStamp.ksOpenStamp()
@@ -116,7 +123,7 @@ class kDocument():
             if ((self.RoughsCoutn == 0) and (self.iDrawingDocument.SpecRough.AddSign == True)):
                   self.iDrawingDocument.SpecRough.AddSign = False
             self.iDrawingDocument.SpecRough.Update()
-      def textInViews(self, old, new):
+      def textReplace(self, __old, __new):
             # string in text
             i = 0
             while (i < self.ViewsCount):
@@ -131,23 +138,23 @@ class kDocument():
                         j = 0
                         while (j < TextLinesCount):
                               w_str = kompas_api7_module.IText(DrawingText_i).TextLine(j).Str
-                              if old in w_str:
-                                    w_str = w_str.replace(old, new)
+                              if __old in w_str:
+                                    w_str = w_str.replace(__old, __new)
                                     kompas_api7_module.IText(DrawingText_i).TextLine(j).Str = w_str
                                     DrawingText_i.Update()
                               j += 1
                         y += 1
                   i += 1
-      def tt(self, old, new):
+      def ttReplace(self, __old, __new):
             ttStrCount = self.iDrawingDocument.TechnicalDemand.Text.Count
             i = 0
             flag = 0
             while i < ttStrCount:
                 ttStr = self.iDrawingDocument.TechnicalDemand.Text.TextLine(i).Str
-                if old in ttStr:
+                if __old in ttStr:
                     print("технические требования:")
                     print(f"[строка {i + 1}/{ttStrCount}]:", self.iDrawingDocument.TechnicalDemand.Text.TextLine(i).Str)
-                    ttStr = ttStr.replace(old, new)
+                    ttStr = ttStr.replace(__old, __new)
                     self.iDrawingDocument.TechnicalDemand.Text.TextLine(i).Str = ttStr
                     flag = 1
                 i += 1
@@ -155,7 +162,34 @@ class kDocument():
                   print("технические требования: совпадений не найдено")
             self.iDrawingDocument.TechnicalDemand.Update()
             # IfaceТech = iDrawingDocument.TechnicalDemand.Text.Add().Add().Str = "ну и залупа этот ваш компас"
-      def table(self, old, new):
+      def techDemAutoPos(self):
+            LTechDam = 176.5
+            HTechDam = 218
+            y = 60
+            l1 = 2
+            l2 = 3.5
+            _y = y + l1 + l2
+            x1 = 27
+            self.iDrawingDocument.TechnicalDemand.BlocksGabarits = [411, 62 + 3.5, 587.5, 100]
+            #[x, y, x + LTechDam, HTechDam]
+            A4V = [27, _y, 27 + LTechDam, _y + HTechDam]
+            #A4G =
+            A3V = [114, _y, 114 + LTechDam, _y + HTechDam]
+            A3G = [237, _y, 237 + LTechDam, _y + HTechDam]
+
+            #print(self.iDrawingDocument.TechnicalDemand.BlocksGabarits)
+            self.iDrawingDocument.TechnicalDemand.Update()
+                  #BlocksGabarits
+      def getTechDem(self):
+            if self.iDrawingDocument.TechnicalDemand.IsCreated == False:
+                  print("Технические требования: отсутсвуют")
+                  return
+            print("Технические требования: ")
+            print("\tлистов: ", int(len(self.iDrawingDocument.TechnicalDemand.BlocksGabarits)/4))
+            print("\tстрок: ", self.iDrawingDocument.TechnicalDemand.Text.Count)
+
+
+      def tableReplace(self, __old, __new):
             i = 0
             while (i < self.ViewsCount):
                   iSymbols2DContainer = kompas_api7_module.IKompasDocument2D(self.kompas_document).ViewsAndLayersManager.Views.View(i)._oleobj_.QueryInterface(kompas_api7_module.NamesToIIDMap['ISymbols2DContainer'], pythoncom.IID_IDispatch)
@@ -178,8 +212,8 @@ class kDocument():
                               while (iColumnsCount < ColumnsCount):
                                     iTableCell = iTable.Cell(iColumnsCount, iRowsCount)
                                     iText = kompas_api7_module.IText(iTableCell.Text._oleobj_.QueryInterface(kompas_api7_module.IText.CLSID, pythoncom.IID_IDispatch))
-                                    if old in iText.TextLine(0).Str:
-                                          iText.TextLine(0).Str = iText.TextLine(0).Str.replace(old, new)
+                                    if __old in iText.TextLine(0).Str:
+                                          iText.TextLine(0).Str = iText.TextLine(0).Str.replace(__old, __new)
                                     iDrawingTable.Update()
                                     iColumnsCount += 1
                               iRowsCount += 1
@@ -187,5 +221,4 @@ class kDocument():
                         j += 1
                   i += 1
 
-document = kDocument()
-document.table("ИШПЖ", "МЕШБ")
+
