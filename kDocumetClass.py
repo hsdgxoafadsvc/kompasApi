@@ -6,30 +6,26 @@ import MiscellaneousHelpers as MH
 class kAPPLICATION:
 
       def __init__(self):
+            #  Подключим константы API Компас
+            self.kConstants = gencache.EnsureModule("{75C9F5D0-B5B8-4526-8681-9903C567D2ED}", 0, 1, 0).constants
+            self.kConstants3D = gencache.EnsureModule("{2CAF168C-7961-4B90-9DA2-701419BEEFE3}", 0, 1, 0).constants
+            #  Подключим описание интерфейсов API5
+            self.kAPI5 = gencache.EnsureModule("{0422828C-F174-495E-AC5D-D31014DBBE87}", 0, 1, 0)
+            self.kObject = self.kAPI5.KompasObject(Dispatch("Kompas.Application.5")._oleobj_.QueryInterface(self.kAPI5.KompasObject.CLSID, pythoncom.IID_IDispatch))
+            MH.iKompasObject = self.kObject
+            #  Подключим описание интерфейсов API7
+            self.kAPI7 = gencache.EnsureModule("{69AC2981-37C0-4379-84FD-5DD2F3C0A520}", 0, 1, 0)
+            self.APP = gencache.EnsureModule("{69AC2981-37C0-4379-84FD-5DD2F3C0A520}", 0, 1, 0).IApplication(Dispatch("Kompas.Application.7")._oleobj_.QueryInterface(self.kAPI7.IApplication.CLSID, pythoncom.IID_IDispatch))
+            MH.iApplication = self.APP
+            self.APP.Visible = False
 
-#  Подключим константы API Компас
-kompas6_constants = gencache.EnsureModule("{75C9F5D0-B5B8-4526-8681-9903C567D2ED}", 0, 1, 0).constants
-kompas6_constants_3d = gencache.EnsureModule("{2CAF168C-7961-4B90-9DA2-701419BEEFE3}", 0, 1, 0).constants
-
-#  Подключим описание интерфейсов API5
-kompas6_api5_module = gencache.EnsureModule("{0422828C-F174-495E-AC5D-D31014DBBE87}", 0, 1, 0)
-kompas_object = kompas6_api5_module.KompasObject(Dispatch("Kompas.Application.5")._oleobj_.QueryInterface(kompas6_api5_module.KompasObject.CLSID, pythoncom.IID_IDispatch))
-MH.iKompasObject = kompas_object
-
-#  Подключим описание интерфейсов API7
-kompas_api7_module = gencache.EnsureModule("{69AC2981-37C0-4379-84FD-5DD2F3C0A520}", 0, 1, 0)
-application = gencache.EnsureModule("{69AC2981-37C0-4379-84FD-5DD2F3C0A520}", 0, 1, 0).IApplication(Dispatch("Kompas.Application.7")._oleobj_.QueryInterface(kompas_api7_module.IApplication.CLSID, pythoncom.IID_IDispatch))
-MH.iApplication = application
-application.Visible = False
-input()
-application.Quit()
 #Documents = application.Documents
 
 #  Получим активный документ
 #iDocument2D = kompas_object.ActiveDocument2D()
 #application.Visible = True
 
-class kDocument():
+class kDocument(kAPPLICATION):
 
       def __init__(self):
             self.kompas_document = application.ActiveDocument
