@@ -17,15 +17,17 @@ class kAPPLICATION:
             self.kAPI7 = gencache.EnsureModule("{69AC2981-37C0-4379-84FD-5DD2F3C0A520}", 0, 1, 0)
             self.APP = gencache.EnsureModule("{69AC2981-37C0-4379-84FD-5DD2F3C0A520}", 0, 1, 0).IApplication(Dispatch("Kompas.Application.7")._oleobj_.QueryInterface(self.kAPI7.IApplication.CLSID, pythoncom.IID_IDispatch))
             MH.iApplication = self.APP
-            self.APP.Visible = False
-
+            self.APP.Visible = True
+            # Список всех открытых чертежей
+            self.docList = []
+      def open(self, path):
+            return self.APP.Documents.Open(path, True)
 #Documents = application.Documents
 
 #  Получим активный документ
 #iDocument2D = kompas_object.ActiveDocument2D()
-#application.Visible = True
 
-class kDocument(kAPPLICATION):
+class kDOCUMENT(kAPPLICATION):
 
       def __init__(self):
             self.kompas_document = application.ActiveDocument
@@ -218,3 +220,6 @@ class kDocument(kAPPLICATION):
                   i += 1
 
 
+kAPPLICATION = kAPPLICATION()
+kAPPLICATION.open(r"C:\Users\borod\OneDrive\Рабочий стол\new2.cdw")
+kAPPLICATION.open(r"C:\Users\borod\OneDrive\Рабочий стол\new.cdw")
