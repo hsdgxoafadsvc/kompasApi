@@ -6,38 +6,41 @@ import MiscellaneousHelpers as MH
 class kAPPLICATION:
 
       def __init__(self):
-            #  Подключим константы API Компас
+            # Подключим константы API Компас
             self.kConstants = gencache.EnsureModule("{75C9F5D0-B5B8-4526-8681-9903C567D2ED}", 0, 1, 0).constants
             self.kConstants3D = gencache.EnsureModule("{2CAF168C-7961-4B90-9DA2-701419BEEFE3}", 0, 1, 0).constants
             #  Подключим описание интерфейсов API5
             self.kAPI5 = gencache.EnsureModule("{0422828C-F174-495E-AC5D-D31014DBBE87}", 0, 1, 0)
             self.kObject = self.kAPI5.KompasObject(Dispatch("Kompas.Application.5")._oleobj_.QueryInterface(self.kAPI5.KompasObject.CLSID, pythoncom.IID_IDispatch))
             MH.iKompasObject = self.kObject
-            #  Подключим описание интерфейсов API7
+            # Подключим описание интерфейсов API7
             self.kAPI7 = gencache.EnsureModule("{69AC2981-37C0-4379-84FD-5DD2F3C0A520}", 0, 1, 0)
             self.APP = gencache.EnsureModule("{69AC2981-37C0-4379-84FD-5DD2F3C0A520}", 0, 1, 0).IApplication(Dispatch("Kompas.Application.7")._oleobj_.QueryInterface(self.kAPI7.IApplication.CLSID, pythoncom.IID_IDispatch))
             MH.iApplication = self.APP
             self.APP.Visible = True
             # Список всех открытых чертежей
             self.docList = []
+
       def open(self, path):
-            return self.APP.Documents.Open(path, True)
-#Documents = application.Documents
+            self.docList.append(kDOCUMENT(self.APP.Documents.Open(path), self.kAPI7, self.kAPI5, self.kObject))
 
-#  Получим активный документ
-#iDocument2D = kompas_object.ActiveDocument2D()
 
-class kDOCUMENT(kAPPLICATION):
+class kDOCUMENT:
 
-      def __init__(self):
-            self.kompas_document = application.ActiveDocument
-            self.kompas_document_2d = kompas_api7_module.IKompasDocument2D(self.kompas_document)
-            self.iDrawingDocument = kompas_api7_module.IDrawingDocument(self.kompas_document._oleobj_.QueryInterface(kompas_api7_module.IDrawingDocument.CLSID,pythoncom.IID_IDispatch))
+      def __init__(self, iKompasDocument, ikAPI7, ikAPI5, ikObject):
+            self.kompas_document = iKompasDocument
+            self.kAPI7 = ikAPI7
+            self.kAPI5 = ikAPI5
+            self.kObject = ikObject
+            self.kompas_document_2d = self.kAPI7.IKompasDocument2D(self.kompas_document)
+            #  Получим активный документ
+            # iDocument2D = self.kObject.ActiveDocument2D()
+            self.ViewsCount = self.kAPI7.IKompasDocument2D(self.kompas_document).ViewsAndLayersManager.Views.Count
+            self.iDrawingDocument = self.kAPI7.IDrawingDocument(self.kompas_document._oleobj_.QueryInterface(self.kAPI7.IDrawingDocument.CLSID,pythoncom.IID_IDispatch))
             self.SheetsCount = self.kompas_document.LayoutSheets.Count
-            self.ViewsCount = kompas_api7_module.IKompasDocument2D(self.kompas_document).ViewsAndLayersManager.Views.Count
             self.TextsInView = 0
             self.TablesInView = 0
-            self.RoughsCoutn = 0
+            self.RoughsCount = 0
             self.LineDimensionsCount = 0
             self.contents()
       def stamp(self):
@@ -67,7 +70,7 @@ class kDOCUMENT(kAPPLICATION):
 
             iStamp.ksTextLine(iTextLineParam)
             iStamp.ksCloseStamp()
-            print(type(kompas_api7_module))
+            print(type(self.kAPI7))
             print(type(application))
             print(type(Documents))
             print("iDocument2D", type(iDocument2D))
@@ -87,58 +90,60 @@ class kDOCUMENT(kAPPLICATION):
             # application.kompas_document.LayoutSheets.Item(1)
             # print(dir(kompas6_api5_module))
 
-            # doc2D = application.ActiveDocument._oleobj_.QueryInterface(kompas_api7_module.NamesToIIDMap['IDrawingDocument'], pythoncom.IID_IDispatch)
+            # doc2D = application.ActiveDocument._oleobj_.QueryInterface(self.kAPI7.NamesToIIDMap['IDrawingDocument'], pythoncom.IID_IDispatch)
 
-            # doc2D = kompas_api7_module.IDrawingDocument(doc2D)
-            # fuck = kompas_api7_module.IKompasDocument2D(kompas_document).ViewsAndLayersManager.Views.View(1)._oleobj_.QueryInterface(kompas_api7_module.NamesToIIDMap['IDrawingContainer'], pythoncom.IID_IDispatch)
+            # doc2D = self.kAPI7.IDrawingDocument(doc2D)
+            # fuck = self.kAPI7.IKompasDocument2D(kompas_document).ViewsAndLayersManager.Views.View(1)._oleobj_.QueryInterface(self.kAPI7.NamesToIIDMap['IDrawingContainer'], pythoncom.IID_IDispatch)
 
-            # print(dir(application.ActiveDocument._oleobj_.QueryInterface(kompas_api7_module.NamesToIIDMap['IDrawingDocument'], pythoncom.IID_IDispatch)))
-            # print(dir(kompas_api7_module))
-            # print(kompas_api7_module.IKompasDocument2D(kompas_document).ViewsAndLayersManager.Views.View(1)._oleobj_.QueryInterface(kompas_api7_module.NamesToIIDMap['IDrawingContainer'], pythoncom.IID_IDispatch))
-            # print(dir(kompas_api7_module.IDrawingContainer(kompas_api7_module.IKompasDocument2D(kompas_document).ViewsAndLayersManager.Views.View(1)._oleobj_.QueryInterface(kompas_api7_module.NamesToIIDMap['IDrawingContainer'], pythoncom.IID_IDispatch)).DrawingTexts.Count ))
+            # print(dir(application.ActiveDocument._oleobj_.QueryInterface(self.kAPI7.NamesToIIDMap['IDrawingDocument'], pythoncom.IID_IDispatch)))
+            # print(dir(self.kAPI7))
+            # print(self.kAPI7.IKompasDocument2D(kompas_document).ViewsAndLayersManager.Views.View(1)._oleobj_.QueryInterface(self.kAPI7.NamesToIIDMap['IDrawingContainer'], pythoncom.IID_IDispatch))
+            # print(dir(self.kAPI7.IDrawingContainer(self.kAPI7.IKompasDocument2D(kompas_document).ViewsAndLayersManager.Views.View(1)._oleobj_.QueryInterface(self.kAPI7.NamesToIIDMap['IDrawingContainer'], pythoncom.IID_IDispatch)).DrawingTexts.Count ))
       def contents(self):
             i = 0
             while (i < self.ViewsCount):
-                  iSymbols2DContainer = kompas_api7_module.IKompasDocument2D(self.kompas_document).ViewsAndLayersManager.Views.View(i)._oleobj_.QueryInterface(kompas_api7_module.NamesToIIDMap['ISymbols2DContainer'], pythoncom.IID_IDispatch)
-                  iSymbols2DContainer = kompas_api7_module.ISymbols2DContainer(iSymbols2DContainer)
-                  self.TextsInView += kompas_api7_module.IDrawingContainer(kompas_api7_module.IKompasDocument2D(self.kompas_document).ViewsAndLayersManager.Views.View(i)._oleobj_.QueryInterface(kompas_api7_module.NamesToIIDMap['IDrawingContainer'], pythoncom.IID_IDispatch)).DrawingTexts.Count
+                  iSymbols2DContainer = self.kAPI7.IKompasDocument2D(self.kompas_document).ViewsAndLayersManager.Views.View(i)._oleobj_.QueryInterface(self.kAPI7.NamesToIIDMap['ISymbols2DContainer'], pythoncom.IID_IDispatch)
+                  iSymbols2DContainer = self.kAPI7.ISymbols2DContainer(iSymbols2DContainer)
+                  self.TextsInView += self.kAPI7.IDrawingContainer(self.kAPI7.IKompasDocument2D(self.kompas_document).ViewsAndLayersManager.Views.View(i)._oleobj_.QueryInterface(self.kAPI7.NamesToIIDMap['IDrawingContainer'], pythoncom.IID_IDispatch)).DrawingTexts.Count
                   self.TablesInView += iSymbols2DContainer.DrawingTables.Count
-                  self.RoughsCoutn += iSymbols2DContainer.Roughs.Count
+                  self.RoughsCount += iSymbols2DContainer.Roughs.Count
                   self.LineDimensionsCount += iSymbols2DContainer.LineDimensions.Count
                   i += 1
+
       def showDrawContent(self):
+
             print("Документ", self.kompas_document.Name, "cодержит: \n",
                   self.SheetsCount, "лист(а)\n",
                   self.ViewsCount, "вид(a/ов)\n",
                   self.TextsInView, "текст(ов)\n",
                   self.TablesInView, "таблиц(ы)\n",
-                  self.RoughsCoutn, "шероховатостей\n",
+                  self.RoughsCount, "шероховатостей\n",
                   self.LineDimensionsCount, "линейных размеров\n")
       def autoSpecRough(self):
             # проверка правильности символа дополнительной шероховатости
-            if ((self.RoughsCoutn > 0) and (self.iDrawingDocument.SpecRough.AddSign != True)):
+            if (self.RoughsCount > 0) and (self.iDrawingDocument.SpecRough.AddSign != True):
                   self.iDrawingDocument.SpecRough.AddSign = True
-            if ((self.RoughsCoutn == 0) and (self.iDrawingDocument.SpecRough.AddSign == True)):
+            if (self.RoughsCount == 0) and (self.iDrawingDocument.SpecRough.AddSign == True):
                   self.iDrawingDocument.SpecRough.AddSign = False
             self.iDrawingDocument.SpecRough.Update()
       def textReplace(self, __old, __new):
             # string in text
             i = 0
             while (i < self.ViewsCount):
-                  iDrawingContainer = kompas_api7_module.IKompasDocument2D(self.kompas_document).ViewsAndLayersManager.Views.View(i)._oleobj_.QueryInterface(kompas_api7_module.NamesToIIDMap['IDrawingContainer'],pythoncom.IID_IDispatch)
-                  iDrawingContainer = kompas_api7_module.IDrawingContainer(iDrawingContainer)
+                  iDrawingContainer = self.kAPI7.IKompasDocument2D(self.kompas_document).ViewsAndLayersManager.Views.View(i)._oleobj_.QueryInterface(self.kAPI7.NamesToIIDMap['IDrawingContainer'],pythoncom.IID_IDispatch)
+                  iDrawingContainer = self.kAPI7.IDrawingContainer(iDrawingContainer)
                   iDrawingText = iDrawingContainer.DrawingTexts
                   ViewTextCount = iDrawingText.Count
                   y = 0
                   while (y < ViewTextCount):
                         DrawingText_i = iDrawingText.DrawingText(y)
-                        TextLinesCount = kompas_api7_module.IText(DrawingText_i).Count
+                        TextLinesCount = self.kAPI7.IText(DrawingText_i).Count
                         j = 0
                         while (j < TextLinesCount):
-                              w_str = kompas_api7_module.IText(DrawingText_i).TextLine(j).Str
+                              w_str = self.kAPI7.IText(DrawingText_i).TextLine(j).Str
                               if __old in w_str:
                                     w_str = w_str.replace(__old, __new)
-                                    kompas_api7_module.IText(DrawingText_i).TextLine(j).Str = w_str
+                                    self.kAPI7.IText(DrawingText_i).TextLine(j).Str = w_str
                                     DrawingText_i.Update()
                               j += 1
                         y += 1
@@ -190,8 +195,8 @@ class kDOCUMENT(kAPPLICATION):
       def tableReplace(self, __old, __new):
             i = 0
             while (i < self.ViewsCount):
-                  iSymbols2DContainer = kompas_api7_module.IKompasDocument2D(self.kompas_document).ViewsAndLayersManager.Views.View(i)._oleobj_.QueryInterface(kompas_api7_module.NamesToIIDMap['ISymbols2DContainer'], pythoncom.IID_IDispatch)
-                  iSymbols2DContainer = kompas_api7_module.ISymbols2DContainer(iSymbols2DContainer)
+                  iSymbols2DContainer = self.kAPI7.IKompasDocument2D(self.kompas_document).ViewsAndLayersManager.Views.View(i)._oleobj_.QueryInterface(self.kAPI7.NamesToIIDMap['ISymbols2DContainer'], pythoncom.IID_IDispatch)
+                  iSymbols2DContainer = self.kAPI7.ISymbols2DContainer(iSymbols2DContainer)
                   TableViewCount = iSymbols2DContainer.DrawingTables.Count
                   if TableViewCount == 0:
                         i += 1
@@ -200,8 +205,8 @@ class kDOCUMENT(kAPPLICATION):
                   j = 0
                   while (j < TableViewCount):
                         iDrawingTable = iDrawingTables.DrawingTable(j)
-                        iTable = iDrawingTable._oleobj_.QueryInterface(kompas_api7_module.ITable.CLSID, pythoncom.IID_IDispatch)
-                        iTable = kompas_api7_module.ITable(iTable)
+                        iTable = iDrawingTable._oleobj_.QueryInterface(self.kAPI7.ITable.CLSID, pythoncom.IID_IDispatch)
+                        iTable = self.kAPI7.ITable(iTable)
                         ColumnsCount = iTable.ColumnsCount
                         iColumnsCount = 0
                         RowsCount = iTable.RowsCount
@@ -209,7 +214,7 @@ class kDOCUMENT(kAPPLICATION):
                         while (iRowsCount < RowsCount):
                               while (iColumnsCount < ColumnsCount):
                                     iTableCell = iTable.Cell(iColumnsCount, iRowsCount)
-                                    iText = kompas_api7_module.IText(iTableCell.Text._oleobj_.QueryInterface(kompas_api7_module.IText.CLSID, pythoncom.IID_IDispatch))
+                                    iText = self.kAPI7.IText(iTableCell.Text._oleobj_.QueryInterface(self.kAPI7.IText.CLSID, pythoncom.IID_IDispatch))
                                     if __old in iText.TextLine(0).Str:
                                           iText.TextLine(0).Str = iText.TextLine(0).Str.replace(__old, __new)
                                     iDrawingTable.Update()
@@ -221,5 +226,6 @@ class kDOCUMENT(kAPPLICATION):
 
 
 kAPPLICATION = kAPPLICATION()
+
 kAPPLICATION.open(r"C:\Users\borod\OneDrive\Рабочий стол\new2.cdw")
-kAPPLICATION.open(r"C:\Users\borod\OneDrive\Рабочий стол\new.cdw")
+kAPPLICATION.docList[0].showDrawContent()
