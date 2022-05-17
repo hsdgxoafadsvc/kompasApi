@@ -5,12 +5,14 @@ import MiscellaneousHelpers as MH
 import sys
 from pathlib import Path
 
+kConstants = gencache.EnsureModule("{75C9F5D0-B5B8-4526-8681-9903C567D2ED}", 0, 1, 0).constants
+kConstants3D = gencache.EnsureModule("{2CAF168C-7961-4B90-9DA2-701419BEEFE3}", 0, 1, 0).constants
+
 class kAPPLICATION:
 
       def __init__(self):
             # Подключим константы API Компас
-            self.kConstants = gencache.EnsureModule("{75C9F5D0-B5B8-4526-8681-9903C567D2ED}", 0, 1, 0).constants
-            self.kConstants3D = gencache.EnsureModule("{2CAF168C-7961-4B90-9DA2-701419BEEFE3}", 0, 1, 0).constants
+
             #  Подключим описание интерфейсов API5
             self.kAPI5 = gencache.EnsureModule("{0422828C-F174-495E-AC5D-D31014DBBE87}", 0, 1, 0)
             self.kObject = self.kAPI5.KompasObject(Dispatch("Kompas.Application.5")._oleobj_.QueryInterface(self.kAPI5.KompasObject.CLSID, pythoncom.IID_IDispatch))
@@ -48,21 +50,22 @@ class kDOCUMENT:
             self.LineDimensionsCount = 0
             self.contents()
       def stamp(self):
+            iDocument2D = self.kObject.ActiveDocument2D()
             iStamp = iDocument2D.GetStamp()
             iStamp.ksOpenStamp()
             iStamp.ksColumnNumber(2)
-            iTextLineParam = kompas6_api5_module.ksTextLineParam(
-            kompas_object.GetParamStruct(kompas6_constants.ko_TextLineParam))
+            iTextLineParam = self.kAPI5.ksTextLineParam(
+            self.kObject.GetParamStruct(kConstants.ko_TextLineParam))
             iTextLineParam.Init()
             iTextLineParam.style = 32768
-            iTextItemArray = kompas_object.GetDynamicArray(4)
-            iTextItemParam = kompas6_api5_module.ksTextItemParam(
-            kompas_object.GetParamStruct(kompas6_constants.ko_TextItemParam))
+            iTextItemArray = self.kObject.GetDynamicArray(4)
+            iTextItemParam = self.kAPI5.ksTextItemParam(
+            self.kObject.GetParamStruct(kConstants.ko_TextItemParam))
             iTextItemParam.Init()
             iTextItemParam.iSNumb = 0
             iTextItemParam.s = "new"
             iTextItemParam.type = 0
-            iTextItemFont = kompas6_api5_module.ksTextItemFont(iTextItemParam.GetItemFont())
+            iTextItemFont = self.kAPI5.ksTextItemFont(iTextItemParam.GetItemFont())
             iTextItemFont.Init()
             iTextItemFont.bitVector = 4096
             iTextItemFont.color = 0
@@ -74,35 +77,7 @@ class kDOCUMENT:
 
             iStamp.ksTextLine(iTextLineParam)
             iStamp.ksCloseStamp()
-            print(type(self.kAPI7))
-            print(type(application))
-            print(type(Documents))
-            print("iDocument2D", type(iDocument2D))
-            print("kDocument", type(self.kDocument))
-            # iDocument2D.ksLineSeg(53.278238290749, 221.464629752129, 122.397130580339, 137.181898847987, 1)
-            # iDocument2D.orthoMode
-            # print(type(iDocument2D))
-            # print(type(kDocument))
-            # print(kDocument.LayoutSheets)
-            # print(kDocument.LayoutSheets)
-            # kDocument.LayoutSheets.Item(1).Format.Format вовращает формат листа
-            # print(kompas_object.Coutn)
 
-            # kDocument.LayoutSheets.Item(1).Format.VerticalOrientation = True
-            # kDocument.LayoutSheets.Item(1).Update()
-
-            # application.kDocument.LayoutSheets.Item(1)
-            # print(dir(kompas6_api5_module))
-
-            # doc2D = application.ActiveDocument._oleobj_.QueryInterface(self.kAPI7.NamesToIIDMap['IDrawingDocument'], pythoncom.IID_IDispatch)
-
-            # doc2D = self.kAPI7.IDrawingDocument(doc2D)
-            # fuck = self.kAPI7.IKompasDocument2D(kDocument).ViewsAndLayersManager.Views.View(1)._oleobj_.QueryInterface(self.kAPI7.NamesToIIDMap['IDrawingContainer'], pythoncom.IID_IDispatch)
-
-            # print(dir(application.ActiveDocument._oleobj_.QueryInterface(self.kAPI7.NamesToIIDMap['IDrawingDocument'], pythoncom.IID_IDispatch)))
-            # print(dir(self.kAPI7))
-            # print(self.kAPI7.IKompasDocument2D(kDocument).ViewsAndLayersManager.Views.View(1)._oleobj_.QueryInterface(self.kAPI7.NamesToIIDMap['IDrawingContainer'], pythoncom.IID_IDispatch))
-            # print(dir(self.kAPI7.IDrawingContainer(self.kAPI7.IKompasDocument2D(kDocument).ViewsAndLayersManager.Views.View(1)._oleobj_.QueryInterface(self.kAPI7.NamesToIIDMap['IDrawingContainer'], pythoncom.IID_IDispatch)).DrawingTexts.Count ))
       def contents(self):
             i = 0
             while (i < self.ViewsCount):
@@ -113,24 +88,72 @@ class kDOCUMENT:
                   self.RoughsCount += iSymbols2DContainer.Roughs.Count
                   self.LineDimensionsCount += iSymbols2DContainer.LineDimensions.Count
                   i += 1
+
       def getStamp(self, n):
             return self.kDocument.LayoutSheets.Item(0).Stamp.Text(n).Str
-            #self.kDocument.LayoutSheets.Item(0).Update()
             #self.kDocument.LayoutSheets.Item(0).Stamp.Update()
             #print(self.kDocument.LayoutSheets.Item(0).Stamp.Text(2).Str)
             #print(dir(self.kDocument.LayoutSheets.Item(0).Stamp.Text(2).Str))
+      def setStamp(self):
+            iDocument2D = self.kObject.ActiveDocument2D()
+            iStamp = iDocument2D.GetStamp()
+            iStamp.ksOpenStamp()
+            iStamp.ksColumnNumber(444)
+            iTextLineParam = self.kAPI5.ksTextLineParam(self.kObject.GetParamStruct(kConstants.ko_TextLineParam))
+            iTextLineParam.Init()
+            iTextLineParam.style = 32768
+            iTextItemArray = self.kObject.GetDynamicArray(LDefin2D.TEXT_ITEM_ARR)
+            iTextItemParam = self.kAPI5.ksTextItemParam(self.kObject.GetParamStruct(kConstants.ko_TextItemParam))
+            iTextItemParam.Init()
+            iTextItemParam.iSNumb = 0
+            iTextItemParam.s = "строка"
+            iTextItemParam.type = 0
+            iTextItemFont = self.kAPI5.ksTextItemFont(iTextItemParam.GetItemFont())
+            iTextItemFont.Init()
+            iTextItemFont.bitVector = 4096
+            iTextItemFont.color = 0
+            iTextItemFont.fontName = "GOST type A"
+            iTextItemFont.height = 5
+            iTextItemFont.ksu = 1
+            iTextItemArray.ksAddArrayItem(-1, iTextItemParam)
+            iTextLineParam.SetTextItemArr(iTextItemArray)
+            iStamp.ksTextLine(iTextLineParam)
+            iStamp.ksCloseStamp()
+
+      def setStampColumn(self, numberColumn):
+            #print(self.kDocument.LayoutSheets.Item(0).Stamp)
+            #print(dir(self.kDocument.LayoutSheets.Item(0).Stamp))
+            print(dir(self.kObject.ActiveDocument2D().GetStamp()))
+            iStamp = self.kObject.ActiveDocument2D().GetStamp()
+            iStamp.ksOpenStamp()
+            iStamp.ksSetStampColumnText(111, "пизда")
+            iStamp.ksCloseStamp()
+
       def getFormatList(self):
             i = 0
             ListInfo = ""
             ListInfo += " " + str(self.SheetsCount) + " лист(ов):"
             while i < self.SheetsCount:
-                  ListInfo += " A" + str(self.kDocument.LayoutSheets.Item(i).Format.Format)
+                  ListInfo += " A" + str(self.kDocument.LayoutSheets.Item(i).Format.Format) + ","
                   if self.kDocument.LayoutSheets.Item(i).Format.FormatMultiplicity > 1:
-                        ListInfo += "x" + str(self.kDocument.LayoutSheets.Item(i).Format.FormatMultiplicity)
+                        ListInfo += "x" + str(self.kDocument.LayoutSheets.Item(i).Format.FormatMultiplicity) + ","
                   i += 1
             return ListInfo
-      def showDrawContent(self):
+      def style(self):
+            layout_sheets = self.kDocument.LayoutSheets
+            layout_sheet = layout_sheets.Item(0)
+            sheet_format = layout_sheet.Format
+            sheet_format.FormatMultiplicity = 1
+            sheet_format.VerticalOrientation = False
+            sheet_format.Format = kConstants.ksFormatA2
+            layout_sheet.LayoutLibraryFileName = r"H:\graphic.lyt"
+            print(layout_sheet.LayoutStyleNumber)
+            layout_sheet.LayoutStyleNumber = 1.0
 
+            layout_sheet.SheetType = kConstants.ksDocumentSheet
+            layout_sheet.Update()
+
+      def showDrawContent(self):
             print("Документ", self.kDocument.Name, "cодержит: \n",
                   self.SheetsCount, "лист(а)\n",
                   self.ViewsCount, "вид(a/ов)\n",
@@ -245,59 +268,60 @@ class kDOCUMENT:
 
 
 kAPPLICATION = kAPPLICATION()
+kAPPLICATION.getActiveDocument()
+kAPPLICATION.docList[0].style()
+kAPPLICATION.docList[0].setStamp()
+# class DirectionTree(object):
+#     """Создать дерево каталогов
+#          @ путь: целевой каталог
+#          @ filename: имя файла для сохранения
+#     """
+#     workPath = r"H:\YandexDisk\Травматология и ортопедия\Блокируемые LCP\Лит О1 (2)\Пластины прямые"
+#     wFile = r"C:\Users\User\Desktop\Новый текстовый документ.txt"
+#
+#     def __init__(self, pathname=workPath, filename=wFile):
+#         super(DirectionTree, self).__init__()
+#         self.pathname = Path(pathname)
+#         self.filename = filename
+#         self.tree = ""
+#
+#     def set_path(self, pathname):
+#         self.pathname = Path(pathname)
+#
+#     def set_filename(self, filename):
+#         self.filename = filename
+#
+#     def generate_tree(self, n=0):
+#         if self.pathname.is_file():
+#             if "cdw" in self.pathname.name:
+#                 self.tree += '    ' * n + ' ' * 4 + self.pathname.name
+#                 #print(self.pathname)
+#                 kAPPLICATION.open(self.pathname)
+#                 self.tree += kAPPLICATION.docList[0].getFormatList()
+#                 self.tree += "\tРазрaб.: " + kAPPLICATION.docList[0].getStamp(110) + ','
+#                 self.tree += " Пров.: " + kAPPLICATION.docList[0].getStamp(111) + '\n'
+#                 kAPPLICATION.docList.pop()
+#             else:
+#                 pass
+#         elif self.pathname.is_dir():
+#             self.tree += '    ' * n + ' ' * 4 + \
+#                 str(self.pathname.relative_to(self.pathname.parent)) + ':' + '\n'
+#             for cp in self.pathname.iterdir():
+#                 self.pathname = Path(cp)
+#                 self.generate_tree(n + 1)
+#
+#     def save_file(self):
+#         with open(self.filename, 'w', encoding='utf-8') as f:
+#             f.write(self.tree)
+# def max_str_len(tree):
+#       max_str_len = 0
+#       for str in tree:
+#            if len(str) > max_str_len:
+#                 max_str_len += len(str)
+#       return max_str_len
 
 
-class DirectionTree(object):
-    """Создать дерево каталогов
-         @ путь: целевой каталог
-         @ filename: имя файла для сохранения
-    """
-    workPath = r"H:\YandexDisk\Травматология и ортопедия\Блокируемые LCP\Лит О1 (2)\Пластины прямые"
-    wFile = r"C:\Users\User\Desktop\Новый текстовый документ.txt"
-
-    def __init__(self, pathname=workPath, filename=wFile):
-        super(DirectionTree, self).__init__()
-        self.pathname = Path(pathname)
-        self.filename = filename
-        self.tree = ""
-
-    def set_path(self, pathname):
-        self.pathname = Path(pathname)
-
-    def set_filename(self, filename):
-        self.filename = filename
-
-    def generate_tree(self, n=0):
-        if self.pathname.is_file():
-            if "cdw" in self.pathname.name:
-                self.tree += '    ' * n + ' ' * 4 + self.pathname.name
-                #print(self.pathname)
-                kAPPLICATION.open(self.pathname)
-                self.tree += kAPPLICATION.docList[0].getFormatList()
-                self.tree += "\tРазрaб.: " + kAPPLICATION.docList[0].getStamp(110) + ','
-                self.tree += " Пров.: " + kAPPLICATION.docList[0].getStamp(111) + '\n'
-                kAPPLICATION.docList.pop()
-            else:
-                pass
-        elif self.pathname.is_dir():
-            self.tree += '    ' * n + ' ' * 4 + \
-                str(self.pathname.relative_to(self.pathname.parent)) + ':' + '\n'
-            for cp in self.pathname.iterdir():
-                self.pathname = Path(cp)
-                self.generate_tree(n + 1)
-
-    def save_file(self):
-        with open(self.filename, 'w', encoding='utf-8') as f:
-            f.write(self.tree)
-def max_str_len(tree):
-      max_str_len = 0
-      for str in tree:
-           if len(str) > max_str_len:
-                max_str_len += len(str)
-      return max_str_len
-
-
-dirtree = DirectionTree()
-dirtree.generate_tree()
-dirtree.save_file()
-print(dirtree.tree)
+# dirtree = DirectionTree()
+# dirtree.generate_tree()
+# dirtree.save_file()
+# print(dirtree.tree)
