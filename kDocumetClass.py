@@ -3,16 +3,16 @@ from win32com.client import Dispatch, gencache
 import LDefin2D
 import MiscellaneousHelpers as MH
 import sys
+import os
 from pathlib import Path
 
+# Подключим константы API Компас
 kConstants = gencache.EnsureModule("{75C9F5D0-B5B8-4526-8681-9903C567D2ED}", 0, 1, 0).constants
 kConstants3D = gencache.EnsureModule("{2CAF168C-7961-4B90-9DA2-701419BEEFE3}", 0, 1, 0).constants
 
 class kAPPLICATION:
 
       def __init__(self):
-            # Подключим константы API Компас
-
             #  Подключим описание интерфейсов API5
             self.kAPI5 = gencache.EnsureModule("{0422828C-F174-495E-AC5D-D31014DBBE87}", 0, 1, 0)
             self.kObject = self.kAPI5.KompasObject(Dispatch("Kompas.Application.5")._oleobj_.QueryInterface(self.kAPI5.KompasObject.CLSID, pythoncom.IID_IDispatch))
@@ -24,7 +24,7 @@ class kAPPLICATION:
             self.APP.Visible = True
             # Список всех открытых чертежей
             self.docList = []
-
+      
       def open(self, path):
             self.docList.append(kDOCUMENT(self.APP.Documents.Open(path), self.kAPI7, self.kAPI5, self.kObject))
       def getActiveDocument(self):
@@ -78,6 +78,12 @@ class kDOCUMENT:
             iStamp.ksTextLine(iTextLineParam)
             iStamp.ksCloseStamp()
 
+      def stamp_template_warning(self):
+            layout_sheets = self.kDocument.LayoutSheets
+            layout_sheet = layout_sheets.Item(0)
+            if layout_sheet.LayoutStyleNumber == 1:
+                  print("Не соответствие шаблона штампа основной надписи. Шаблон будет заменен")
+
       def contents(self):
             i = 0
             while (i < self.ViewsCount):
@@ -106,7 +112,7 @@ class kDOCUMENT:
             iTextItemParam = self.kAPI5.ksTextItemParam(self.kObject.GetParamStruct(kConstants.ko_TextItemParam))
             iTextItemParam.Init()
             iTextItemParam.iSNumb = 0
-            iTextItemParam.s = "строка"
+            iTextItemParam.s = "Ура см табл"
             iTextItemParam.type = 0
             iTextItemFont = self.kAPI5.ksTextItemFont(iTextItemParam.GetItemFont())
             iTextItemFont.Init()
@@ -146,10 +152,9 @@ class kDOCUMENT:
             sheet_format.FormatMultiplicity = 1
             sheet_format.VerticalOrientation = False
             sheet_format.Format = kConstants.ksFormatA2
-            layout_sheet.LayoutLibraryFileName = r"H:\graphic.lyt"
+            layout_sheet.LayoutLibraryFileName = os.getcwd() + r"\graphic.lyt"
+            layout_sheet.LayoutStyleNumber = 444.0
             print(layout_sheet.LayoutStyleNumber)
-            layout_sheet.LayoutStyleNumber = 1.0
-
             layout_sheet.SheetType = kConstants.ksDocumentSheet
             layout_sheet.Update()
 
@@ -161,6 +166,7 @@ class kDOCUMENT:
                   self.TablesInView, "таблиц(ы)\n",
                   self.RoughsCount, "шероховатостей\n",
                   self.LineDimensionsCount, "линейных размеров\n")
+
       def autoSpecRough(self):
             # проверка правильности символа дополнительной шероховатости
             if (self.RoughsCount > 0) and (self.iDrawingDocument.SpecRough.AddSign != True):
@@ -168,6 +174,9 @@ class kDOCUMENT:
             if (self.RoughsCount == 0) and (self.iDrawingDocument.SpecRough.AddSign == True):
                   self.iDrawingDocument.SpecRough.AddSign = False
             self.iDrawingDocument.SpecRough.Update()
+
+      def parse(self, __old, __new):
+            pass
       def textReplace(self, __old, __new):
             # string in text
             i = 0
@@ -207,33 +216,6 @@ class kDOCUMENT:
                   print("технические требования: совпадений не найдено")
             self.iDrawingDocument.TechnicalDemand.Update()
             # IfaceТech = iDrawingDocument.TechnicalDemand.Text.Add().Add().Str = "ну и залупа этот ваш компас"
-      def techDemAutoPos(self):
-            LTechDam = 176.5
-            HTechDam = 218
-            y = 60
-            l1 = 2
-            l2 = 3.5
-            _y = y + l1 + l2
-            x1 = 27
-            # = [411, 62 + 3.5, 587.5, 100]
-            #[x, y, x + LTechDam, HTechDam]
-            A4V = [27, _y, 27 + LTechDam, _y + HTechDam]
-            #A4G =
-            A3V = [114, _y, 114 + LTechDam, _y + HTechDam]
-            A3G = [237, _y, 237 + LTechDam, _y + HTechDam]
-            self.iDrawingDocument.TechnicalDemand.BlocksGabarits = A3G
-            #print(self.iDrawingDocument.TechnicalDemand.BlocksGabarits)
-            self.iDrawingDocument.TechnicalDemand.Update()
-                  #BlocksGabarits
-      def getTechDem(self):
-            if self.iDrawingDocument.TechnicalDemand.IsCreated == False:
-                  print("Технические требования: отсутсвуют")
-                  return
-            print("Технические требования: ")
-            print("\tлистов: ", int(len(self.iDrawingDocument.TechnicalDemand.BlocksGabarits)/4))
-            print("\tстрок: ", self.iDrawingDocument.TechnicalDemand.Text.Count)
-
-
       def tableReplace(self, __old, __new):
             i = 0
             while (i < self.ViewsCount):
@@ -266,11 +248,41 @@ class kDOCUMENT:
                         j += 1
                   i += 1
 
+      def techDemAutoPos(self):
+            LTechDam = 176.5
+            HTechDam = 218
+            y = 60
+            l1 = 2
+            l2 = 3.5
+            _y = y + l1 + l2
+            x1 = 27
+            # = [411, 62 + 3.5, 587.5, 100]
+            #[x, y, x + LTechDam, HTechDam]
+            A4V = [27, _y, 27 + LTechDam, _y + HTechDam]
+            #A4G =
+            A3V = [114, _y, 114 + LTechDam, _y + HTechDam]
+            A3G = [237, _y, 237 + LTechDam, _y + HTechDam]
+            self.iDrawingDocument.TechnicalDemand.BlocksGabarits = A3G
+            #print(self.iDrawingDocument.TechnicalDemand.BlocksGabarits)
+            self.iDrawingDocument.TechnicalDemand.Update()
+                  #BlocksGabarits
+      def getTechDem(self):
+            if self.iDrawingDocument.TechnicalDemand.IsCreated == False:
+                  print("Технические требования: отсутсвуют")
+                  return
+            print("Технические требования: ")
+            print("\tлистов: ", int(len(self.iDrawingDocument.TechnicalDemand.BlocksGabarits)/4))
+            print("\tстрок: ", self.iDrawingDocument.TechnicalDemand.Text.Count)
+
+
+
+
 
 kAPPLICATION = kAPPLICATION()
 kAPPLICATION.getActiveDocument()
 kAPPLICATION.docList[0].style()
 kAPPLICATION.docList[0].setStamp()
+#kAPPLICATION.docList[0].stamp_template_warning()
 # class DirectionTree(object):
 #     """Создать дерево каталогов
 #          @ путь: целевой каталог
